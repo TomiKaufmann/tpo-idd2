@@ -1,3 +1,4 @@
 pip install flask
 
-correr archivo → flask --app app run
+levantar entorno → .venv\Scripts\activate  
+correr app → flask --app app run
