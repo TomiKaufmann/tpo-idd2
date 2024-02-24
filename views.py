@@ -9,13 +9,13 @@ views = Blueprint(__name__,"/login")
 
 #Database
 
-def connect_db(user_mail = 'kaufmann@uade.com',user_password = 'uade123'):
+def connect_db(user_mail = 'kikiazcoaga',user_password = 'uade123'):
     try:
         escaped_username = quote_plus(user_mail)
         escaped_password = quote_plus(user_password)
         # Intentamos establecer la conexión con MongoDB Atlas
         mongo_uri = f"mongodb+srv://{escaped_username}:{escaped_password}@projectbd2.jcixys6.mongodb.net/?retryWrites=true&w=majority&appName=ProjectBD2"
-        client = MongoClient(mongo_uri)
+        client = MongoClient('mongodb+srv://kikiazcoaga:uade123@projectbd2.jcixys6.mongodb.net/''?retryWrites=true&w=majority&appName=ProjectBD2')
     
         # Seleccionamos la base de datos y la colección
         db = client['ProjectDB2']
@@ -26,19 +26,19 @@ def connect_db(user_mail = 'kaufmann@uade.com',user_password = 'uade123'):
     return db
 
 def add_new_user(new_user_mail,new_user_password):
-    escaped_username = quote_plus('kaufmann@gmail.com')
+    escaped_username = quote_plus('kikiazcoaga')
     escaped_password = quote_plus('uade123')
     mongo_uri = f"mongodb+srv://{escaped_username}:{escaped_password}@projectbd2.jcixys6.mongodb.net/?retryWrites=true&w=majority&appName=ProjectBD2"
-    client = MongoClient(mongo_uri)
+    client = MongoClient('mongodb+srv://kikiazcoaga:uade123@projectbd2.jcixys6.mongodb.net/''?retryWrites=true&w=majority&appName=ProjectBD2')
     db = client['ProjectDB2']
     #Verificar nombre de user existente
     if db['Users'].find_one({'email': new_user_mail}):
         error = 'Ese mail ya está registrado'
         return render_template('register.html', error=error)
     
-    hashed_pw = bcrypt.hashpw(new_user_password.encode('utf-8'), bcrypt.gensalt())
+    # hashed_pw = bcrypt.hashpw(new_user_password.encode('utf-8'), bcrypt.gensalt())
     
-    db['Users'].insert_one({'email': new_user_mail, 'password': hashed_pw})
+    db['Users'].insert_one({'email': new_user_mail, 'password': new_user_password})
 
 
 
@@ -52,7 +52,7 @@ def login():
         db = connect_db(user_mail,user_password)
         user_data = db['Users'].find_one({'email': user_mail})
         
-        if user_data and bcrypt.checkpw(user_password.encode('utf-8'), user_data['password']):
+        if user_data:
             session['user_id'] = str(user_data['_id'])
             return redirect(url_for('views.home', user_mail=user_mail, user_password = user_password))
         else:
@@ -68,14 +68,15 @@ def register():
         new_user_mail = request.form['user_mail']
         new_user_password = request.form['user_password']    
         add_new_user(new_user_mail,new_user_password)
-        return render_template('/home', user_mail = user_mail)
+        return render_template("/home", user_mail = new_user_mail)
 
     return render_template('register.html')
 
 @views.route("/home")
 def home():
     if 'user_id' in session:
-        user_data = collection_users.find_one({'_id': ObjectId(session['user_id'])})
+        db = connect_db()
+        user_data = db['Users'].find_one({'_id': ObjectId(session['user_id'])})
         return render_template('home.html',user_mail=user_data['email'])
     else:
         return redirect(url_for('login'))
